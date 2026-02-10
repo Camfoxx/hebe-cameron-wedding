@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hebe & Cameron</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600&family=Raleway:wght@200;300;400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #14456e;
+            --dark: #2a2a2a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Raleway', sans-serif;
+            background: url('background.jpg') center/cover fixed;
+            overflow: hidden;
+            height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Name Entry */
+        .name-screen {
+            position: fixed;
+            inset: 0;
+            background: url('background.jpg') center/cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 1;
+            transition: opacity 1.6s ease;
+        }
+
+        .name-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .name-box {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.92);
+            padding: 4rem;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .name-box h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 4em;
+            font-weight: 300;
+            color: var(--navy);
+            margin-bottom: 0.8rem;
+        }
+
+        .name-box p {
+            font-size: 0.85em;
+            color: var(--dark);
+            margin-bottom: 2.5rem;
+            font-weight: 200;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            opacity: 0.6;
+        }
+
+        .name-box input {
+            width: 400px;
+            max-width: 90vw;
+            padding: 1rem;
+            border: none;
+            border-bottom: 1px solid rgba(20, 69, 110, 0.3);
+            background: transparent;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.6em;
+            text-align: center;
+            color: var(--navy);
+            transition: border-color 0.4s;
+        }
+
+        .name-box input:focus {
+            outline: none;
+            border-bottom-color: var(--navy);
+        }
+
+        .name-box button {
+            margin-top: 2rem;
+            padding: 1rem 3.5rem;
+            background: var(--navy);
+            color: white;
+            border: none;
+            font-family: 'Raleway', sans-serif;
+            font-size: 0.8em;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.5s;
+            font-weight: 200;
+        }
+
+        .name-box button:hover {
+            background: var(--dark);
+            letter-spacing: 0.3em;
+        }
+
+        /* Main Viewport */
+        .viewport {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stage-container {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1s ease, visibility 1s ease;
+        }
+
+        .stage-container.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Stage 0: Monument Opening */
+        .monument-stage {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .monument-wrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: min(85vw, 800px);
+            height: min(92vh, 1300px);
+            cursor: pointer;
+        }
+
+        .invite-behind {
+            width: 100%;
+            height: 100%;
+            background-image: url('final-invite.jpg');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: drop-shadow(0 40px 80px rgba(0, 0, 0, 0.2));
+            position: relative;
+        }
+
+        .guest-name-on-invite {
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5em;
+            font-weight: 400;
+            color: var(--navy);
+            letter-spacing: 0.08em;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 1.5s ease 3s;
+            text-shadow: 0 2px 8px rgba(255, 255, 255, 0.6);
+            z-index: 5;
+        }
+
+        .monument-wrapper.opened .guest-name-on-invite {
+            opacity: 1;
+        }
+
+        .arch-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .arch-half {
+            position: absolute;
+            top: 0;
+            width: 50%;
+            height: 100%;
+            background-image: url('monument-arch.png');
+            background-size: 200% 100%;
+            transition: transform 3s cubic-bezier(0.65, 0, 0.35, 1);
+            filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.15));
+        }
+
+        .arch-half.left {
+            left: 0;
+            background-position: left center;
+            transform-origin: left center;
+        }
+
+        .arch-half.right {
+            right: 0;
+            background-position: right center;
+            transform-origin: right center;
+        }
+
+        .monument-wrapper.opened .arch-half.left {
+            transform: translateX(-102%);
+        }
+
+        .monument-wrapper.opened .arch-half.right {
+            transform: translateX(102%);
+        }
+
+        .guest-label {
+            position: absolute;
+            top: -4.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.2em;
+            font-weight: 300;
+            color: var(--navy);
+            letter-spacing: 0.1em;
+            white-space: nowrap;
+            text-shadow: 0 2px 10px rgba(255, 255, 255, 0.8);
+        }
+
+        /* Stage 1: Zoom Out then Zoom In to First Map */
+        .zoom-stage {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .map-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.3);
+            width: min(85vw, 1100px);
+            height: min(85vh, 1000px);
+            cursor: pointer;
+            opacity: 0;
+            transition: all 2.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .map-container.zoom-in {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        .map-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 30px 70px rgba(0, 0, 0, 0.2));
+        }
+
+        /* Stage 2: Second Map Slow Transition */
+        .second-map-stage {
+            width: 100%;
+            height: 100%;
+        }
+
+        .second-map-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: min(85vw, 1100px);
+            height: min(85vh, 1000px);
+            cursor: pointer;
+        }
+
+        .second-map-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 30px 70px rgba(0, 0, 0, 0.2));
+        }
+
+        /* Stage 3: RSVP Card */
+        .rsvp-stage {
+            width: 100%;
+            height: 100%;
+        }
+
+        .rsvp-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            width: min(80vw, 950px);
+            height: min(80vh, 950px);
+            opacity: 0;
+            animation: revealRSVP 1.8s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards;
+        }
+
+        @keyframes revealRSVP {
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .rsvp-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 35px 80px rgba(0, 0, 0, 0.2));
+        }
+
+        .rsvp-message {
+            position: absolute;
+            bottom: -6rem;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 100%;
+            opacity: 0;
+            animation: fadeInUp 1.5s ease 1s forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(-20px);
+            }
+        }
+
+        .rsvp-message h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3em;
+            font-weight: 300;
+            color: var(--navy);
+            margin-bottom: 2rem;
+        }
+
+        .rsvp-link {
+            display: inline-block;
+            padding: 1.2rem 3rem;
+            background: var(--navy);
+            color: white;
+            text-decoration: none;
+            font-family: 'Raleway', sans-serif;
+            font-size: 0.85em;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            font-weight: 200;
+            transition: all 0.5s;
+        }
+
+        .rsvp-link:hover {
+            background: var(--dark);
+            letter-spacing: 0.25em;
+            transform: translateY(-3px);
+        }
+
+        /* Navigation */
+        .nav-dots {
+            position: fixed;
+            bottom: 3rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .nav-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(20, 69, 110, 0.25);
+            cursor: pointer;
+            transition: all 0.5s;
+        }
+
+        .nav-dot.active {
+            background: var(--navy);
+            transform: scale(1.6);
+        }
+
+        .reset-btn {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 0.8rem 1.8rem;
+            border-radius: 50px;
+            font-family: 'Raleway', sans-serif;
+            font-size: 0.7em;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--navy);
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            font-weight: 200;
+        }
+
+        .reset-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .reset-btn:hover {
+            background: white;
+        }
+
+        .hint {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--navy);
+            background: rgba(255, 255, 255, 0.85);
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-size: 0.7em;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            opacity: 0.7;
+            font-weight: 200;
+            animation: breathe 3s ease-in-out infinite;
+        }
+
+        .hint.hidden {
+            display: none;
+        }
+
+        .hint-after-open {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--navy);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-size: 0.7em;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            font-weight: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
+
+        .hint-after-open.show {
+            opacity: 0.7;
+            animation: breathe 3s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .name-box h1 { font-size: 2.5em; }
+            .guest-label { font-size: 1.5em; }
+            .guest-name-on-invite { font-size: 1.8em; }
+            .rsvp-message h2 { font-size: 2em; }
+            .hint { font-size: 0.65em; padding: 0.6rem 1.5rem; }
+            .hint-after-open { font-size: 0.65em; padding: 0.6rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Name Entry -->
+    <div class="name-screen" id="nameScreen">
+        <div class="name-box">
+            <h1>You're Invited</h1>
+            <p>Enter your name to continue</p>
+            <input type="text" id="nameInput" placeholder="Your Name" autofocus />
+            <br>
+            <button id="startBtn">Begin</button>
+        </div>
+    </div>
+
+    <!-- Viewport -->
+    <div class="viewport">
+        
+        <!-- Stage 0: Monument Opening -->
+        <div class="stage-container active" id="stage0">
+            <div class="monument-stage">
+                <div class="monument-wrapper" id="monumentWrapper">
+                    <div class="guest-label" id="guestName"></div>
+                    <div class="invite-behind">
+                        <div class="guest-name-on-invite" id="guestNameOnInvite"></div>
+                    </div>
+                    <div class="arch-overlay">
+                        <div class="arch-half left"></div>
+                        <div class="arch-half right"></div>
+                    </div>
+                </div>
+                <div class="hint" id="hintInitial">Click to reveal</div>
+                <div class="hint-after-open" id="hintAfterOpen">Click to continue</div>
+            </div>
+        </div>
+
+        <!-- Stage 1: Zoom to First Map (Journeys) -->
+        <div class="stage-container" id="stage1">
+            <div class="zoom-stage">
+                <div class="map-container" id="mapContainer1">
+                    <img src="first-map.jpg" alt="Journeys to Tinos" />
+                </div>
+                <div class="hint">Click to continue</div>
+            </div>
+        </div>
+
+        <!-- Stage 2: Second Map (Tinos Detail) -->
+        <div class="stage-container" id="stage2">
+            <div class="second-map-stage">
+                <div class="second-map-container" id="mapContainer2">
+                    <img src="second-map.jpg" alt="Tinos Map" />
+                </div>
+                <div class="hint">Click to continue</div>
+            </div>
+        </div>
+
+        <!-- Stage 3: RSVP -->
+        <div class="stage-container" id="stage3">
+            <div class="rsvp-stage">
+                <div class="rsvp-container">
+                    <img src="rsvp-card.jpg" alt="RSVP" />
+                    <div class="rsvp-message">
+                        <h2>Join Us</h2>
+                        <a href="https://hebeandcam.com" target="_blank" class="rsvp-link">
+                            Info & RSVP @ Hebeandcam.com
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav-dots">
+        <div class="nav-dot active" data-stage="0"></div>
+        <div class="nav-dot" data-stage="1"></div>
+        <div class="nav-dot" data-stage="2"></div>
+        <div class="nav-dot" data-stage="3"></div>
+    </div>
+
+    <button class="reset-btn" id="resetBtn">← Restart</button>
+
+    <script>
+        let currentStage = 0;
+        const totalStages = 3;
+
+        // Name entry
+        const nameInput = document.getElementById('nameInput');
+        const startBtn = document.getElementById('startBtn');
+        const nameScreen = document.getElementById('nameScreen');
+        const guestName = document.getElementById('guestName');
+        const guestNameOnInvite = document.getElementById('guestNameOnInvite');
+
+        nameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') startExperience();
+        });
+
+        startBtn.addEventListener('click', startExperience);
+
+        function startExperience() {
+            const name = nameInput.value.trim();
+            if (name) {
+                guestName.textContent = name;
+                guestNameOnInvite.textContent = name;
+                nameScreen.classList.add('hidden');
+            }
+        }
+
+        // Stage interactions
+        const monumentWrapper = document.getElementById('monumentWrapper');
+        const mapContainer1 = document.getElementById('mapContainer1');
+        const mapContainer2 = document.getElementById('mapContainer2');
+        const hintInitial = document.getElementById('hintInitial');
+        const hintAfterOpen = document.getElementById('hintAfterOpen');
+
+        monumentWrapper.addEventListener('click', () => {
+            if (!monumentWrapper.classList.contains('opened')) {
+                monumentWrapper.classList.add('opened');
+                // Hide first hint, show second hint
+                hintInitial.classList.add('hidden');
+                setTimeout(() => {
+                    hintAfterOpen.classList.add('show');
+                }, 3200);
+            } else {
+                // Second click advances to next stage
+                advance();
+            }
+        });
+
+        mapContainer1.addEventListener('click', () => {
+            advance();
+        });
+
+        mapContainer2.addEventListener('click', () => {
+            advance();
+        });
+
+        // Navigation
+        function goToStage(stage) {
+            if (stage >= 0 && stage <= totalStages) {
+                currentStage = stage;
+                updateUI();
+            }
+        }
+
+        function advance() {
+            if (currentStage < totalStages) {
+                currentStage++;
+                updateUI();
+            }
+        }
+
+        function reset() {
+            currentStage = 0;
+            monumentWrapper.classList.remove('opened');
+            document.getElementById('mapContainer1').classList.remove('zoom-in');
+            hintInitial.classList.remove('hidden');
+            hintAfterOpen.classList.remove('show');
+            updateUI();
+        }
+
+        function updateUI() {
+            document.querySelectorAll('.stage-container').forEach((stage, index) => {
+                stage.classList.toggle('active', index === currentStage);
+            });
+
+            // Trigger zoom-in for map stage
+            if (currentStage === 1) {
+                setTimeout(() => {
+                    document.getElementById('mapContainer1').classList.add('zoom-in');
+                }, 100);
+            }
+
+            document.querySelectorAll('.nav-dot').forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentStage);
+            });
+
+            const resetBtn = document.getElementById('resetBtn');
+            resetBtn.classList.toggle('visible', currentStage > 0);
+        }
+
+        document.querySelectorAll('.nav-dot').forEach(dot => {
+            dot.addEventListener('click', () => {
+                goToStage(parseInt(dot.dataset.stage));
+            });
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', reset);
+
+        // Keyboard
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') advance();
+            else if (e.key === 'ArrowLeft' && currentStage > 0) goToStage(currentStage - 1);
+            else if (e.key === 'Home') reset();
+        });
+
+        // Touch swipe
+        let touchStartX = 0;
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            const diff = e.changedTouches[0].screenX - touchStartX;
+            if (Math.abs(diff) > 60) {
+                if (diff < 0) advance();
+                else if (currentStage > 0) goToStage(currentStage - 1);
+            }
+        });
+    </script>
+</body>
+</html>
