@@ -628,9 +628,11 @@
                 guestNameOnInvite.textContent = name;
                 nameScreen.classList.add('hidden');
                 
-                // Start music
+                // Start music from beginning
+                backgroundMusic.currentTime = 0;
                 backgroundMusic.play().then(() => {
                     musicPlaying = true;
+                    startMusicAtStage(0); // Will pause at 0:13
                 }).catch(err => {
                     console.log('Autoplay blocked, user can click music button');
                 });
@@ -644,21 +646,63 @@
                 musicBtn.classList.add('muted');
                 musicPlaying = false;
             } else {
-                backgroundMusic.play();
-                musicBtn.classList.remove('muted');
                 musicPlaying = true;
+                musicBtn.classList.remove('muted');
+                startMusicAtStage(musicStage); // Resume at current stage
             }
         });
 
-        // Pause music on transitions
-        function pauseMusicForTransition(duration = 2000) {
-            if (musicPlaying) {
-                backgroundMusic.pause();
-                setTimeout(() => {
-                    if (musicPlaying) {
-                        backgroundMusic.play();
+        // Choreographed music - plays to timestamps, allows early clicks
+        let musicStage = 0;
+        let currentTimeChecker = null;
+        const musicTimestamps = [
+            { pauseAt: 13 },      // Stage 0: Pause at 0:13
+            { pauseAt: 23 },      // Stage 1: Pause at 0:23
+            { pauseAt: 33 },      // Stage 2: Pause at 0:33
+            { pauseAt: null }     // Stage 3: Play to end, loop
+        ];
+
+        function startMusicAtStage(stage) {
+            if (!musicPlaying) return;
+            
+            musicStage = stage;
+            const timestamp = musicTimestamps[stage];
+            
+            // Clear any existing checker
+            if (currentTimeChecker) {
+                clearInterval(currentTimeChecker);
+            }
+            
+            // Play from current position (or resume)
+            backgroundMusic.play();
+            
+            // If there's a pause point, monitor for it
+            if (timestamp.pauseAt !== null) {
+                currentTimeChecker = setInterval(() => {
+                    if (backgroundMusic.currentTime >= timestamp.pauseAt) {
+                        backgroundMusic.pause();
+                        clearInterval(currentTimeChecker);
+                        currentTimeChecker = null;
                     }
-                }, duration);
+                }, 100);
+            }
+        }
+
+        function advanceMusic() {
+            // Move to next stage
+            if (musicStage < musicTimestamps.length - 1) {
+                const nextStage = musicStage + 1;
+                const nextTimestamp = musicTimestamps[nextStage];
+                
+                // If we haven't reached the current pause point yet, jump to it
+                const currentPausePoint = musicTimestamps[musicStage].pauseAt;
+                if (currentPausePoint && backgroundMusic.currentTime < currentPausePoint) {
+                    backgroundMusic.currentTime = currentPausePoint;
+                }
+                
+                // Now advance to next stage
+                musicStage = nextStage;
+                startMusicAtStage(nextStage);
             }
         }
 
@@ -679,26 +723,26 @@
         monumentWrapper.addEventListener('click', () => {
             if (!monumentWrapper.classList.contains('opened')) {
                 monumentWrapper.classList.add('opened');
-                pauseMusicForTransition(3200);
+                // Music continues playing until 0:13 where it pauses
                 // Hide first hint, show second hint
                 hintInitial.classList.add('hidden');
                 setTimeout(() => {
                     hintAfterOpen.classList.add('show');
                 }, 3200);
             } else {
-                // Second click advances to next stage
-                pauseMusicForTransition(2500);
+                // Second click advances to next stage AND next music section
+                advanceMusic(); // 0:13 → 0:23
                 advance();
             }
         });
 
         mapContainer1.addEventListener('click', () => {
-            pauseMusicForTransition(1000);
+            advanceMusic(); // 0:23 → 0:33
             advance();
         });
 
         mapContainer2.addEventListener('click', () => {
-            pauseMusicForTransition(1800);
+            advanceMusic(); // 0:33 → end (continuous)
             advance();
         });
 
@@ -723,6 +767,13 @@
             document.getElementById('mapContainer1').classList.remove('zoom-in');
             hintInitial.classList.remove('hidden');
             hintAfterOpen.classList.remove('show');
+            
+            // Reset music to beginning
+            if (musicPlaying) {
+                musicStage = 0;
+                startMusicAtStage(0);
+            }
+            
             updateUI();
         }
 
