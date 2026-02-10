@@ -293,13 +293,23 @@
             height: 100%;
         }
 
-        .rsvp-container {
+        .rsvp-layout {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(0.95);
-            width: min(80vw, 950px);
-            height: min(80vh, 950px);
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4rem;
+            width: 90vw;
+            max-width: 1400px;
+        }
+
+        .rsvp-container {
+            flex: 1;
+            max-width: 600px;
+            height: auto;
             opacity: 0;
             animation: revealRSVP 1.8s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards;
         }
@@ -307,32 +317,32 @@
         @keyframes revealRSVP {
             to {
                 opacity: 1;
-                transform: translate(-50%, -50%) scale(1);
+                transform: scale(1);
             }
         }
 
         .rsvp-container img {
             width: 100%;
-            height: 100%;
+            height: auto;
             object-fit: contain;
             filter: drop-shadow(0 35px 80px rgba(0, 0, 0, 0.2));
         }
 
         .rsvp-message {
-            position: absolute;
-            bottom: -6rem;
-            left: 50%;
-            transform: translateX(-50%);
+            flex: 0 0 auto;
             text-align: center;
-            width: 100%;
             opacity: 0;
-            animation: fadeInUp 1.5s ease 1s forwards;
+            animation: fadeInRight 1.5s ease 0.8s forwards;
         }
 
-        @keyframes fadeInUp {
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
             to {
                 opacity: 1;
-                transform: translateX(-50%) translateY(-20px);
+                transform: translateX(0);
             }
         }
 
@@ -502,13 +512,50 @@
         }
 
         /* Responsive */
+        @media (max-width: 1024px) {
+            .rsvp-layout {
+                flex-direction: column;
+                gap: 2rem;
+            }
+
+            .rsvp-container {
+                max-width: 80vw;
+            }
+            
+            .rsvp-message {
+                margin-bottom: 3rem;
+            }
+        }
+
         @media (max-width: 768px) {
             .name-box h1 { font-size: 2.5em; }
-            .guest-label { font-size: 1.5em; }
-            .guest-name-on-invite { font-size: 1.8em; }
-            .rsvp-message h2 { font-size: 2em; }
+            .guest-label { 
+                font-size: 1.5em; 
+                top: -3rem;
+            }
+            .guest-name-on-invite { 
+                font-size: 1.8em; 
+                top: 18%;
+            }
+            .rsvp-message h2 { 
+                font-size: 2.5em;
+                margin-bottom: 1.5rem;
+            }
+            .rsvp-link {
+                font-size: 1em;
+                padding: 1.5rem 2.5rem;
+                display: inline-block;
+            }
+            .rsvp-message {
+                margin-bottom: 5rem;
+                padding: 0 1rem;
+            }
             .hint { font-size: 0.65em; padding: 0.6rem 1.5rem; }
             .hint-after-open { font-size: 0.65em; padding: 0.6rem 1.5rem; }
+            
+            .rsvp-layout {
+                gap: 1.5rem;
+            }
         }
     </style>
 </head>
@@ -568,8 +615,10 @@
         <!-- Stage 3: RSVP -->
         <div class="stage-container" id="stage3">
             <div class="rsvp-stage">
-                <div class="rsvp-container">
-                    <img src="rsvp-card.jpg" alt="RSVP" />
+                <div class="rsvp-layout">
+                    <div class="rsvp-container">
+                        <img src="rsvp-card.jpg" alt="RSVP" />
+                    </div>
                     <div class="rsvp-message">
                         <h2>Join Us</h2>
                         <a href="https://hebeandcam.com" target="_blank" class="rsvp-link">
